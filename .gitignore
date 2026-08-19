@@ -1,0 +1,29 @@
+.env
+.venv
+
+# Terraform working directory and generated files
+.terraform/
+*.tfstate
+*.tfstate.*
+crash.log
+crash.*.log
+*.tfplan
+*.tfplan.json
+
+# Variable files may contain secrets
+*.tfvars
+*.tfvars.json
+!*.tfvars.example
+
+# Local credentials and key material
+.aws/
+credentials
+*.pem
+*.key
+*.p12
+*.pfx
+*.crt
+
+# Local tooling and operating-system files
+.terraform.lock.hcl
+.DS_Store

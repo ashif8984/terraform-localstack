@@ -1,0 +1,75 @@
+name: Terraform Dev
+
+on:
+  push:
+    paths-ignore:
+      - "README.md"
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  id-token: write
+
+env:
+  TF_WORKING_DIR: environments/dev
+  TF_IN_AUTOMATION: true
+  AWS_REGION: us-east-1
+
+jobs:
+  terraform:
+    name: Deploy infrastructure using Terraform
+    runs-on: ubuntu-latest
+    environment: terraform-dev
+    defaults:
+      run:
+        working-directory: environments/dev
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.11.0"
+      
+      - name: Install Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.10'
+
+      - name: Install tflocal
+        run: |
+          pip install terraform-local
+          tflocal --version
+
+      - name: Start LocalStack
+        uses: LocalStack/setup-localstack@main
+        with:
+          image-tag: 'latest'
+          install-awslocal: 'true'
+          use-pro: 'true'
+          configuration: LS_LOG=trace
+        env:
+          LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
+
+      - name: Terraform format check
+        run: terraform fmt -check -recursive . ../../modules
+
+      - name: Terraform init
+        run: terraform init -input=false
+
+      - name: Terraform validate
+        run: terraform validate -no-color
+
+      - name: Terraform plan
+        run: terraform plan -input=false -no-color -lock-timeout=5m -var="use_localstack=false" -out=tfplan
+
+      - name: Terraform apply
+        if: github.event_name == 'workflow_dispatch'
+        run: terraform apply -input=false -no-color tfplan
