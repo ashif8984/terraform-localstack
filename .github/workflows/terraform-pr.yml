@@ -22,15 +22,16 @@ env:
   TF_VAR_environment: dev
   TF_VAR_project_name: terraform-lab
 
+
 jobs:
-  terraform:
-    name: terraform
+  # Job 1: Generates the plan automatically
+  terraform-plan:
+    name: terraform-plan
     runs-on: ubuntu-latest
     environment: terraform-dev
     defaults:
       run:
         working-directory: environments/dev
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -78,6 +79,34 @@ jobs:
       - name: Terraform plan
         run: tflocal plan -input=false -no-color -lock-timeout=5m -out=tfplan
 
+      # Save the plan file so the next job can use it
+      - name: Upload Plan Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tfplan
+          path: tfplan
+
+  # Job 2: Pauses and waits for manual approval
+  terraform-apply:
+    needs: terraform-plan
+    runs-on: ubuntu-latest
+    environment: terraform-dev   # <-- THIS triggers the approval prompt
+    defaults:
+      run:
+        working-directory: environments/dev
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Download Plan Artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: tfplan
+
       - name: Terraform apply
-        if: github.event_name == 'workflow_dispatch'
         run: tflocal apply -input=false -no-color tfplan
+
+
+
+
+
