@@ -70,9 +70,6 @@ jobs:
       - name: Terraform format check
         run: terraform fmt -check -recursive . ../../modules
 
-      - name: Terraform init
-        run: terraform init -input=false
-
       - name: Terraform validate
         run: terraform validate -no-color
 
