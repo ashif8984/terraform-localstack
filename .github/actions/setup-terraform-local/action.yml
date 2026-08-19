@@ -1,0 +1,44 @@
+name: "Setup Terraform and LocalStack"
+description: "Installs Terraform, Python, tflocal, and spins up LocalStack"
+
+inputs:
+  localstack-token:
+    description: "LocalStack Auth Token"
+    required: true
+  terraform-version:
+    description: "Terraform version"
+    required: false
+    default: "1.11.0"
+  python-version:
+    description: "Python version"
+    required: false
+    default: "3.10"
+
+runs:
+  using: "composite"
+  steps:
+    - name: Setup Terraform
+      uses: hashicorp/setup-terraform@v3
+      with:
+        terraform_version: ${{ inputs.terraform-version }}
+
+    - name: Install Python
+      uses: actions/setup-python@v5
+      with:
+        python-version: ${{ inputs.python-version }}
+
+    - name: Install tflocal
+      shell: bash
+      run: |
+        pip install terraform-local
+        pip show terraform-local
+
+    - name: Start LocalStack
+      uses: LocalStack/setup-localstack@main
+      with:
+        image-tag: "latest"
+        install-awslocal: "true"
+        use-pro: "true"
+        configuration: LS_LOG=trace
+      env:
+        LOCALSTACK_AUTH_TOKEN: ${{ inputs.localstack-token }}
