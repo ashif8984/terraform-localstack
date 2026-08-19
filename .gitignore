@@ -27,3 +27,5 @@ credentials
 # Local tooling and operating-system files
 .terraform.lock.hcl
 .DS_Store
+
+rough/
