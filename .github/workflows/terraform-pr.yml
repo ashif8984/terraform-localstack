@@ -60,7 +60,7 @@ jobs:
 
       - name: Run Terraform tests
         run: |
-          tflocal init
+          tflocal init -reconfigure -input=false
           tflocal test
 
       - name: Check LocalStack logs
@@ -68,14 +68,14 @@ jobs:
           localstack logs
 
       - name: Terraform format check
-        run: terraform fmt -check -recursive . ../../modules
+        run: tflocal fmt -check -recursive . ../../modules
 
       - name: Terraform validate
-        run: terraform validate -no-color
+        run: tflocal validate -no-color
 
       - name: Terraform plan
-        run: terraform plan -input=false -no-color -lock-timeout=5m -out=tfplan
+        run: tflocal plan -input=false -no-color -lock-timeout=5m -out=tfplan
 
       - name: Terraform apply
         if: github.event_name == 'workflow_dispatch'
-        run: terraform apply -input=false -no-color tfplan
+        run: tflocal apply -input=false -no-color tfplan
