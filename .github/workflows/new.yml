@@ -22,13 +22,11 @@ env:
   TF_VAR_environment: dev
   TF_VAR_project_name: terraform-lab
 
-
 jobs:
   # Job 1: Generates the plan automatically
   terraform-plan:
     name: terraform-plan
     runs-on: ubuntu-latest
-    # environment: terraform-dev
     defaults:
       run:
         working-directory: environments/dev
@@ -36,30 +34,10 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      - name: Setup Toolchain
+        uses: ./.github/actions/setup-terraform-local
         with:
-          terraform_version: "1.11.0"
-
-      - name: Install Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-
-      - name: Install tflocal
-        run: |
-          pip install terraform-local
-          pip show terraform-local
-
-      - name: Start LocalStack
-        uses: LocalStack/setup-localstack@main
-        with:
-          image-tag: "latest"
-          install-awslocal: "true"
-          use-pro: "true"
-          configuration: LS_LOG=trace
-        env:
-          LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
+          localstack-token: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
 
       - name: Run Terraform tests
         run: |
@@ -67,8 +45,7 @@ jobs:
           tflocal test
 
       - name: Check LocalStack logs
-        run: |
-          localstack logs
+        run: localstack logs
 
       - name: Terraform format check
         run: tflocal fmt -check -recursive . ../../modules
@@ -85,56 +62,29 @@ jobs:
           echo "| Action | Resource Type | Resource Name |"
           echo "|---|---|---|"
           jq -r '.resource_changes[] | "| \(.change.actions | join(",")) | \(.type) | \(.name) |"' tfplan.json
-     
-      # Save the plan file so the next job can use it
+
       - name: Upload Plan Artifact
         uses: actions/upload-artifact@v4
         with:
           name: tfplan
-          path: |
-            environments/dev/tfplan
-            environments/dev/.terraform.lock.hcl
-
-
+          path: environments/dev/tfplan
 
   # Job 2: Pauses and waits for manual approval
   terraform-apply:
     needs: terraform-plan
     runs-on: ubuntu-latest
-    environment: terraform-dev   # <-- THIS triggers the approval prompt
+    environment: terraform-dev
     defaults:
       run:
         working-directory: environments/dev
     steps:
-      - name: Checkout code
+      - name: Checkout
         uses: actions/checkout@v4
 
-      
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      - name: Setup Toolchain
+        uses: ./.github/actions/setup-terraform-local
         with:
-          terraform_version: "1.11.0"
-
-      - name: Install Python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.10"
-
-      - name: Install tflocal
-        run: |
-          pip install terraform-local
-          pip show terraform-local
-
-      - name: Start LocalStack
-        uses: LocalStack/setup-localstack@main
-        with:
-          image-tag: "latest"
-          install-awslocal: "true"
-          use-pro: "true"
-          configuration: LS_LOG=trace
-        env:
-          LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
-
+          localstack-token: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
 
       - name: Download Plan Artifact
         uses: actions/download-artifact@v4
@@ -143,13 +93,7 @@ jobs:
           path: environments/dev
 
       - name: Terraform Init
-        # Use -backend=false to skip re-checking backend state, or run standard init
-        run: tflocal init -input=false
+        run: tflocal init -reconfigure -input=false
 
       - name: Terraform apply
         run: tflocal apply -input=false -no-color tfplan
-
-
-
-
-
