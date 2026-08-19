@@ -79,12 +79,19 @@ jobs:
       - name: Terraform plan
         run: tflocal plan -input=false -no-color -lock-timeout=5m -out=tfplan
 
+      - name: Terraform show
+        run: |
+          tflocal show -json tfplan > tfplan.json
+          echo "| Action | Resource Type | Resource Name |"
+          echo "|---|---|---|"
+          jq -r '.resource_changes[] | "| \(.change.actions | join(",")) | \(.type) | \(.name) |"' tfplan.json
+     
       # Save the plan file so the next job can use it
       - name: Upload Plan Artifact
         uses: actions/upload-artifact@v4
         with:
           name: tfplan
-          path: tfplan
+          path: environments/dev/tfplan   # <-- Adjust path to match your folder
 
   # Job 2: Pauses and waits for manual approval
   terraform-apply:
@@ -102,6 +109,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           name: tfplan
+          path: environments/dev
 
       - name: Terraform apply
         run: tflocal apply -input=false -no-color tfplan
