@@ -1,3 +1,4 @@
+# s3 bucket for application
 module "application_bucket" {
   source         = "../../modules/s3"
   bucket_name    = "${var.project_name}-${var.environment}"
