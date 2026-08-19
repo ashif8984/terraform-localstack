@@ -19,6 +19,8 @@ env:
   TF_WORKING_DIR: environments/dev
   TF_IN_AUTOMATION: true
   AWS_REGION: us-east-1
+  TF_VAR_environment: dev
+  TF_VAR_project_name: terraform-lab
 
 jobs:
   terraform:
@@ -37,11 +39,11 @@ jobs:
         uses: hashicorp/setup-terraform@v3
         with:
           terraform_version: "1.11.0"
-      
+
       - name: Install Python
         uses: actions/setup-python@v4
         with:
-          python-version: '3.10'
+          python-version: "3.10"
 
       - name: Install tflocal
         run: |
@@ -51,9 +53,9 @@ jobs:
       - name: Start LocalStack
         uses: LocalStack/setup-localstack@main
         with:
-          image-tag: 'latest'
-          install-awslocal: 'true'
-          use-pro: 'true'
+          image-tag: "latest"
+          install-awslocal: "true"
+          use-pro: "true"
           configuration: LS_LOG=trace
         env:
           LOCALSTACK_AUTH_TOKEN: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
