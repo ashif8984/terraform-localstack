@@ -36,10 +36,17 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Setup Toolchain
-        uses: ./.github/actions/setup-terraform-local
-        with:
-          localstack-token: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
+      # - name: Setup Toolchain
+      #   uses: ./.github/actions/setup-terraform-local
+      #   with:
+      #     localstack-token: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
+      # Verify the container environment
+      - name: Check Toolchain
+        run: |
+          terraform -version
+          tflocal --version
+          python3 --version
+
 
       - name: Run Terraform tests
         run: |
@@ -90,10 +97,16 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Toolchain
-        uses: ./.github/actions/setup-terraform-local
-        with:
-          localstack-token: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
+      # - name: Setup Toolchain
+      #   uses: ./.github/actions/setup-terraform-local
+      #   with:
+      #     localstack-token: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
+      # Verify the container environment
+      - name: Check Toolchain
+        run: |
+          terraform -version
+          tflocal --version
+          python3 --version
 
       - name: Download Plan Artifact
         uses: actions/download-artifact@v4
