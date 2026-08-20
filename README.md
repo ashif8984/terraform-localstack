@@ -268,3 +268,8 @@ For the workflow to operate reliably:
 - Confirm that the S3 backend bucket exists before the first workflow run.
 - Treat the uploaded `tfplan` artifact as deployment-sensitive data.
 
+## 9. References
+
+- [LocalStack Docs](https://docs.localstack.cloud/aws/getting-started/installation/)
+- [Terraform tests](https://developer.hashicorp.com/terraform/language/tests)
+- [Terraform Localstack sample repo](https://github.com/localstack-samples/terraform-tests-localstack-github-actions-ci/blob/main/.github/workflows/ci.yml)
