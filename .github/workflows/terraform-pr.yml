@@ -53,9 +53,9 @@ jobs:
           tflocal init -reconfigure -input=false
           tflocal test
 
-      - name: Check LocalStack logs
-        run: |
-          localstack logs
+      # - name: Check LocalStack logs
+      #   run: |
+      #     localstack logs
 
       - name: Terraform format check
         run: tflocal fmt -check -recursive . ../../modules
@@ -97,16 +97,19 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
+      - name: Add Python Venv to PATH
+        run: echo "/opt/code/localstack/.venv/bin" >> $GITHUB_PATH
+
       # - name: Setup Toolchain
       #   uses: ./.github/actions/setup-terraform-local
       #   with:
       #     localstack-token: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
       # Verify the container environment
-      - name: Check Toolchain
-        run: |
-          terraform -version
-          tflocal --version
-          python3 --version
+      # - name: Check Toolchain
+      #   run: |
+      #     terraform -version
+      #     tflocal --version
+      #     python3 --version
 
       - name: Download Plan Artifact
         uses: actions/download-artifact@v4
