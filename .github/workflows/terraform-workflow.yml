@@ -9,7 +9,6 @@ on:
   pull_request:
     branches:
       - main
-  workflow_dispatch:
 
 permissions:
   contents: read
@@ -24,10 +23,9 @@ env:
 
 
 jobs:
-  # Job 1: Generates the plan automatically
+  # Job 1: Runs terraform plan and uploads the plan as an artifact
   terraform-plan:
     name: terraform-plan
-    # runs-on: ubuntu-latest
     runs-on: self-hosted
     defaults:
       run:
@@ -36,26 +34,16 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
-      # - name: Setup Toolchain
-      #   uses: ./.github/actions/setup-terraform-local
-      #   with:
-      #     localstack-token: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
-      # Verify the container environment
       - name: Check Toolchain
         run: |
           terraform -version
           tflocal --version
           python3 --version
 
-
       - name: Run Terraform tests
         run: |
           tflocal init -reconfigure -input=false
           tflocal test
-
-      # - name: Check LocalStack logs
-      #   run: |
-      #     localstack logs
 
       - name: Terraform format check
         run: tflocal fmt -check -recursive . ../../modules
@@ -73,8 +61,7 @@ jobs:
           echo "|---|---|---|"
           jq -r '.resource_changes[] | "| \(.change.actions | join(",")) | \(.type) | \(.name) |"' tfplan.json
      
-      # Save the plan file so the next job can use it
-      - name: Upload Plan Artifact
+      - name: Upload terraform plan Artifact
         uses: actions/upload-artifact@v4
         with:
           name: tfplan
@@ -82,9 +69,7 @@ jobs:
             environments/dev/tfplan
             environments/dev/.terraform.lock.hcl
 
-
-
-  # Job 2: Pauses and waits for manual approval
+  # Job 2: Pauses and waits for manual approval before terraform apply
   terraform-apply:
     needs: terraform-plan
     # runs-on: ubuntu-latest
@@ -99,17 +84,6 @@ jobs:
 
       - name: Add Python Venv to PATH
         run: echo "/opt/code/localstack/.venv/bin" >> $GITHUB_PATH
-
-      # - name: Setup Toolchain
-      #   uses: ./.github/actions/setup-terraform-local
-      #   with:
-      #     localstack-token: ${{ secrets.LOCALSTACK_AUTH_TOKEN }}
-      # Verify the container environment
-      # - name: Check Toolchain
-      #   run: |
-      #     terraform -version
-      #     tflocal --version
-      #     python3 --version
 
       - name: Download Plan Artifact
         uses: actions/download-artifact@v4
